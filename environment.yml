@@ -1,4 +1,4 @@
-name: VLA_env
+name: project_Lumina
 channels:
   - conda-forge
   - pkgs/main
@@ -115,7 +115,9 @@ dependencies:
     - ImageIO==2.37.2
     - Jinja2==3.1.6
     - MarkupSafe==3.0.3
+    - PyOpenGL==3.1.10
     - PyYAML==6.0.3
+    - absl-py==2.4.0
     - accelerate==1.12.0
     - aiohappyeyeballs==2.6.1
     - aiohttp==3.13.3
@@ -135,10 +137,12 @@ dependencies:
     - dill==0.4.0
     - draccus==0.10.0
     - einops==0.8.2
+    - etils==1.13.0
     - filelock==3.24.3
     - frozenlist==1.8.0
     - fsspec==2025.9.0
     - gitdb==4.0.12
+    - glfw==2.10.0
     - gymnasium==1.2.3
     - hf-xet==1.3.1
     - hf_transfer==0.1.9
@@ -146,11 +150,13 @@ dependencies:
     - idna==3.11
     - imageio-ffmpeg==0.6.0
     - importlib_metadata==8.7.1
+    - importlib_resources==6.5.2
     - inquirerpy==0.3.4
     - jsonlines==4.0.0
     - lerobot==0.4.3
     - mergedeep==1.3.4
     - mpmath==1.3.0
+    - mujoco==3.5.0
     - multidict==6.7.1
     - multiprocess==0.70.16
     - mypy_extensions==1.1.0
@@ -204,4 +210,4 @@ dependencies:
     - yarl==1.22.0
     - zipp==3.23.0
 
-prefix: "/opt/anaconda3/envs/VLA_env"
+prefix: "/opt/anaconda3/envs/project_Lumina"
