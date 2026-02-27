@@ -103,5 +103,14 @@ torchcodec requires FFmpeg shared libraries (`.dylib`) that are not correctly li
 `smolvla_base` (the pre-trained checkpoint) was not trained on LIBERO data. Running it zero-shot on LIBERO observations produces a 6-DOF output instead of the expected 7-DOF, because the action and state spaces don't align. This is expected and confirms that **fine-tuning smolvla on LIBERO data is required** before outputs are meaningful. The verification script confirms the pipeline runs end-to-end; it does not validate action quality.
 
 ---
+## 🤝 Contributing & Collaboration
+
+If you install any new packages into the environment, **always update `environment.yml` before pushing** so others can reproduce your exact setup:
+
+```bash
+mamba env export --no-builds > environment.yml
+```
+The **--no-builds** flag strips platform-specific build strings (e.g. py310h1234_0) that would cause the environment to fail on someone else's machine. Without it, the export is often not reproducible across different OS versions or hardware.
+
 
 🎉 **Environment is good to go. Time to do some science!**
