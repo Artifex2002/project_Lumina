@@ -100,6 +100,10 @@ def parse_args():
         help="Maximum environment steps per rollout",
     )
     parser.add_argument(
+        "--log_every", type=int, default=25,
+        help="Print rollout progress every N steps (0 disables)",
+    )
+    parser.add_argument(
         "--seed", type=int, default=42,
         help="Base random seed",
     )
@@ -436,6 +440,9 @@ def run_rollout(env, policy, task_description, args, device,
     ee_positions = []
     success = False
     total_steps = 0
+    step_times = []
+    infer_times = []
+    rollout_start = time.time()
 
     # Determine which axis is "up" — in LIBERO/Robosuite, Z is up
     UP_AXIS = 2  # index into [x, y, z]
@@ -443,14 +450,17 @@ def run_rollout(env, policy, task_description, args, device,
 
     try:
         for step_idx in range(args.max_steps):
+            step_start = time.time()
             # ── Format observation ────────────────────────────────────────
             formatted_obs = format_obs(
                 obs, task_description, device, preprocess_fn=preprocess_fn
             )
 
             # ── Policy inference ──────────────────────────────────────────
+            infer_start = time.time()
             with torch.no_grad():
                 raw_action = policy.select_action(formatted_obs)
+            infer_times.append(time.time() - infer_start)
 
             # ── Post-process if available ─────────────────────────────────
             if postprocess_fn is not None:
@@ -469,6 +479,18 @@ def run_rollout(env, policy, task_description, args, device,
             # ── Step environment ──────────────────────────────────────────
             obs, reward, done, info = env.step(action_np)
             total_steps = step_idx + 1
+            step_times.append(time.time() - step_start)
+
+            if args.log_every and total_steps % args.log_every == 0:
+                avg_step = sum(step_times) / len(step_times)
+                avg_infer = sum(infer_times) / len(infer_times)
+                elapsed = time.time() - rollout_start
+                print(
+                    f"  step {total_steps}/{args.max_steps} | "
+                    f"avg_step={avg_step:.2f}s avg_infer={avg_infer:.2f}s "
+                    f"last_z={ee_pos[2]:.3f} elapsed={elapsed:.1f}s",
+                    flush=True,
+                )
 
             # Check task success via LIBERO's dedicated method
             task_success = env.check_success()
@@ -561,6 +583,7 @@ def main():
     print(f"  Condition   : {args.condition}")
     print(f"  Num rollouts: {args.num_rollouts}")
     print(f"  Max steps   : {args.max_steps}")
+    print(f"  Log every   : {args.log_every}")
     print(f"  Seed        : {args.seed}")
     if args.condition == "random_injection":
         print(f"  Alpha       : {args.alpha}")
