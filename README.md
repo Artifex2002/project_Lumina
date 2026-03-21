@@ -33,7 +33,10 @@ This repository provides a ready-to-use **conda** environment along with verific
 conda install mamba -n base -c conda-forge
 
 # Install system-level dependencies for MuJoCo rendering
+#For Apple:
 brew install glfw cmake
+#For Linux:
+sudo apt install libglfw3-dev cmake
 ```
 
 ### Step 2: Clone This Repository
@@ -47,7 +50,10 @@ cd project_Lumina
 
 ```bash
 # Creates the 'project_Lumina' environment with all pinned dependencies
-mamba env create -f environment.yml
+#For Apple
+mamba env create -f environment_apple.yml
+#For Linux
+mamba env create -f environment_linux.yml
 
 # Activate it
 conda activate project_Lumina
@@ -71,7 +77,8 @@ Both scripts should complete without errors and print a final `✓` summary.
 
 ```
 project_Lumina/
-├── environment.yml                    # Conda environment spec (pinned versions)
+├── environment_apple.yml                    # Conda environment spec (pinned versions)
+├── environment_linux.yml                    # Conda environment spec (pinned versions)
 ├── mujoco_robosuite_check.py          # Verifies MuJoCo + Robosuite installation
 ├── smolvla_minimal_inference_check.py # Verifies full SmolVLA inference pipeline
 ├── check_script_outputs/              # JSON outputs from verification runs
@@ -92,7 +99,7 @@ This project pins Robosuite to **1.4.1** specifically.
 | Robosuite 1.4.1 | ✅ Compatible with LIBERO |
 | Robosuite 1.5.0+ | ❌ Breaks LIBERO (`SingleArmEnv` was removed) |
 
-`environment.yml` ensures you always get the correct version.
+`environment_<OS>.yml` ensures you always get the correct version.
 
 ### Why pyav instead of torchcodec?
 

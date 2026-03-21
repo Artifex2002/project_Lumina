@@ -2,18 +2,18 @@
   "instruction": "put the white mug on the left plate and put the yellow and white mug on the right plate",
   "action": [
     [
-      -0.31454890966415405,
-      0.14408740401268005,
-      0.742252767086029,
-      2.1262950897216797,
-      0.25664886832237244,
-      0.0019012212287634611
+      0.15894877910614014,
+      0.4212760925292969,
+      1.1975345611572266,
+      1.9627543687820435,
+      0.13008174300193787,
+      0.6484655737876892
     ]
   ],
   "action_shape": [
     1,
     6
   ],
-  "device": "mps",
+  "device": "cuda",
   "is_valid_shape": false
 }
