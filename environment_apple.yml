@@ -48,8 +48,7 @@ dependencies:
   - libhwloc=2.12.2
   - libhwy=1.3.0
   - libiconv=1.18
-  - libintl
-  - gettext
+  - libintl=0.25.1
   - libjpeg-turbo=3.1.2
   - libjxl=0.11.2
   - liblzma=5.8.2
