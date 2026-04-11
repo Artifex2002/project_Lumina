@@ -28,8 +28,25 @@ NUM_ROLLOUTS="${NUM_ROLLOUTS:-10}"
 MAX_STEPS="${MAX_STEPS:-600}"
 SEED="${SEED:-42}"
 
+activate_conda_env() {
+    if command -v conda >/dev/null 2>&1; then
+        eval "$(conda shell.bash hook)"
+        conda activate "$1"
+        return
+    fi
+
+    if [[ -n "${CONDA_EXE:-}" ]]; then
+        eval "$("${CONDA_EXE}" shell.bash hook)"
+        conda activate "$1"
+        return
+    fi
+
+    echo "ERROR: Could not find a usable conda command after loading ${AI_MODULE}."
+    exit 1
+}
+
 module load "${AI_MODULE}"
-source activate "${ENV_PREFIX}"
+activate_conda_env "${ENV_PREFIX}"
 
 mkdir -p "${OUTPUT_ROOT}" "${HF_HOME}"
 export HF_HOME

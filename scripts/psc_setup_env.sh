@@ -15,6 +15,23 @@ ENV_PREFIX="${ENV_PREFIX:-$PSC_ROOT/conda_envs/project_Lumina_psc}"
 LIBERO_ROOT="${LIBERO_ROOT:-$PSC_ROOT/external/LIBERO}"
 REQ_FILE="${SCRIPT_DIR}/psc_runtime_requirements.txt"
 
+activate_conda_env() {
+    if command -v conda >/dev/null 2>&1; then
+        eval "$(conda shell.bash hook)"
+        conda activate "$1"
+        return
+    fi
+
+    if [[ -n "${CONDA_EXE:-}" ]]; then
+        eval "$("${CONDA_EXE}" shell.bash hook)"
+        conda activate "$1"
+        return
+    fi
+
+    echo "ERROR: Could not find a usable conda command after loading ${AI_MODULE}."
+    exit 1
+}
+
 echo "==> Loading PSC AI module: ${AI_MODULE}"
 module load "${AI_MODULE}"
 
@@ -26,12 +43,12 @@ fi
 
 if [[ ! -d "${ENV_PREFIX}" ]]; then
     echo "==> Cloning PSC AI environment into ${ENV_PREFIX}"
-    source activate "${AI_ENV}"
+    activate_conda_env "${AI_ENV}"
     conda create --prefix "${ENV_PREFIX}" --clone "${AI_ENV}" -y
 fi
 
 echo "==> Activating ${ENV_PREFIX}"
-source activate "${ENV_PREFIX}"
+activate_conda_env "${ENV_PREFIX}"
 
 echo "==> Installing pinned runtime overlay"
 python -m pip install --upgrade pip setuptools wheel
