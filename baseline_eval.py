@@ -121,6 +121,11 @@ def parse_args():
         "--output_dir", type=str, default="baseline_results",
         help="Directory to save result JSON files",
     )
+    parser.add_argument(
+        "--device", type=str, default="auto",
+        choices=["auto", "cpu", "cuda", "mps"],
+        help="Execution device. 'auto' prefers CUDA, then MPS, then CPU.",
+    )
     return parser.parse_args()
 
 
@@ -136,8 +141,7 @@ def load_model(args):
     policy = SmolVLAPolicy.from_pretrained(args.model_id)
     policy.eval()
 
-    # Use MPS if available (macOS), else CPU
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = select_device(getattr(args, "device", "auto"))
     policy = policy.to(device)
 
     elapsed = time.time() - t0
@@ -159,6 +163,30 @@ def load_model(args):
             print("  Will attempt raw inference.")
 
     return policy, device, preprocess_fn, postprocess_fn
+
+
+def select_device(device_arg):
+    """Resolve a user-facing device choice into a concrete torch device."""
+    if device_arg == "auto":
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        return torch.device("cpu")
+
+    if device_arg == "cuda":
+        if not torch.cuda.is_available():
+            print("ERROR: --device cuda was requested, but CUDA is not available.")
+            sys.exit(1)
+        return torch.device("cuda")
+
+    if device_arg == "mps":
+        if not torch.backends.mps.is_available():
+            print("ERROR: --device mps was requested, but MPS is not available.")
+            sys.exit(1)
+        return torch.device("mps")
+
+    return torch.device("cpu")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -204,10 +232,31 @@ def setup_env(args):
     print("Environment created.")
 
     # Load initial states for reproducible evaluation
-    init_states = task_suite.get_task_init_states(args.task_idx)
+    init_states = load_libero_init_states(task_suite, args.task_idx)
     print(f"  Init states loaded: {init_states.shape}")
 
     return env, task_suite, task_description, init_states
+
+
+def load_libero_init_states(task_suite, task_idx):
+    """
+    Load LIBERO init states in a way that is compatible with newer PyTorch.
+
+    LIBERO's benchmark code uses plain torch.load(...). In PyTorch 2.6+,
+    weights_only defaults to True, which breaks loading these non-weight
+    numpy / pickle payloads. These files come from the local LIBERO checkout,
+    so we explicitly opt into the old behavior here.
+    """
+    init_states_path = os.path.join(
+        get_libero_path("init_states"),
+        task_suite.tasks[task_idx].problem_folder,
+        task_suite.tasks[task_idx].init_states_file,
+    )
+    try:
+        return torch.load(init_states_path, weights_only=False)
+    except TypeError:
+        # Older PyTorch versions do not support weights_only.
+        return torch.load(init_states_path)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -653,6 +702,7 @@ def main():
 
     output = {
         "model_id": args.model_id,
+        "device": str(device),
         "task_idx": args.task_idx,
         "task_description": task_description,
         "condition": args.condition,
