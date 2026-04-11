@@ -14,6 +14,8 @@ This repository provides a ready-to-use **conda** environment along with verific
 - **PyTorch with MPS** — GPU acceleration via Apple Metal Performance Shaders
 - **pyav** — Video decoding backend (replaces torchcodec, which is broken on macOS ARM?)
 
+For Bridges-2 / PSC deployment, see [`BRIDGES2.md`](BRIDGES2.md).
+
 ---
 
 ## 🚀 Quick Start
@@ -79,8 +81,14 @@ Both scripts should complete without errors and print a final `✓` summary.
 project_Lumina/
 ├── environment_apple.yml                    # Conda environment spec (pinned versions)
 ├── environment_linux.yml                    # Conda environment spec (pinned versions)
+├── BRIDGES2.md                              # Bridges-2 migration and runbook
 ├── mujoco_robosuite_check.py          # Verifies MuJoCo + Robosuite installation
 ├── smolvla_minimal_inference_check.py # Verifies full SmolVLA inference pipeline
+├── scripts/
+│   ├── psc_runtime_requirements.txt    # Runtime overlay for Bridges-2
+│   ├── psc_setup_env.sh                # Clone PSC AI env and install project deps
+│   ├── psc_preflight.sh                # Interactive GPU smoke test
+│   └── psc_baseline.sbatch             # Single-V100 batch launcher
 ├── check_script_outputs/              # JSON outputs from verification runs
 │   └── phase0_1_results.json
 └── README.md                          # This file
