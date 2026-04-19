@@ -10,7 +10,7 @@ if [[ -z "${PSC_ROOT}" ]]; then
     exit 1
 fi
 
-AI_MODULE="${AI_MODULE:-AI}"
+AI_MODULE="${AI_MODULE:-AI/pytorch_23.02-1.13.1-py3}"
 ENV_PREFIX="${ENV_PREFIX:-$PSC_ROOT/conda_envs/project_Lumina_psc}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-$PSC_ROOT/results/project_Lumina/smoke}"
 HF_HOME="${HF_HOME:-$PSC_ROOT/cache/huggingface}"

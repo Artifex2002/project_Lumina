@@ -10,7 +10,7 @@ if [[ -z "${PSC_ROOT}" ]]; then
     exit 1
 fi
 
-AI_MODULE="${AI_MODULE:-AI}"
+AI_MODULE="${AI_MODULE:-AI/pytorch_23.02-1.13.1-py3}"
 ENV_PREFIX="${ENV_PREFIX:-$PSC_ROOT/conda_envs/project_Lumina_psc}"
 LIBERO_ROOT="${LIBERO_ROOT:-$PSC_ROOT/external/LIBERO}"
 REQ_FILE="${SCRIPT_DIR}/psc_runtime_requirements.txt"
@@ -35,16 +35,16 @@ activate_conda_env() {
 echo "==> Loading PSC AI module: ${AI_MODULE}"
 module load "${AI_MODULE}"
 
-if [[ -z "${AI_ENV:-}" ]]; then
-    echo "ERROR: AI_ENV is not set after loading ${AI_MODULE}."
+MODULE_ENV_PREFIX="${CONDA_PREFIX:-}"
+if [[ -z "${MODULE_ENV_PREFIX}" ]]; then
+    echo "ERROR: CONDA_PREFIX is not set after loading ${AI_MODULE}."
     echo "Inspect Bridges-2 modules with: module spider AI"
     exit 1
 fi
 
 if [[ ! -d "${ENV_PREFIX}" ]]; then
     echo "==> Cloning PSC AI environment into ${ENV_PREFIX}"
-    activate_conda_env "${AI_ENV}"
-    conda create --prefix "${ENV_PREFIX}" --clone "${AI_ENV}" -y
+    conda create --prefix "${ENV_PREFIX}" --clone "${MODULE_ENV_PREFIX}" -y
 fi
 
 echo "==> Activating ${ENV_PREFIX}"

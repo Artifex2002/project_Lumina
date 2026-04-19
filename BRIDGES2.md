@@ -2,6 +2,53 @@
 
 This repo now includes a concrete Bridges-2 single-V100 workflow for getting the SmolVLA + LIBERO baseline onto PSC with the least amount of moving parts.
 
+## SSH Access From This Machine
+
+Your local SSH config now has these Bridges-2 aliases:
+
+- `bridges2` or `bridges2-login`: log in to PSC's Bridges-2 login host at `bridges2.psc.edu`
+- `bridges2-gpu-shared`: start an interactive `GPU-shared` allocation for `1x v100-32` and drop into that session
+- `bridges2-v007`: jump through the login host to `v007.bridges2.psc.edu`
+
+Important operational note:
+
+- PSC's documented workflow is `laptop -> login node -> interactive or batch job -> compute node`
+- a fixed compute node alias like `bridges2-v007` is only useful if Slurm has actually placed your job on that node
+- for normal development and CLI work, use `bridges2` and `bridges2-gpu-shared`
+
+Convenience wrappers were added under [`scripts/`](scripts):
+
+- [`scripts/bridges2_login.sh`](scripts/bridges2_login.sh): open a shell on the Bridges-2 login node or run a one-off login-node command
+- [`scripts/bridges2_remote.sh`](scripts/bridges2_remote.sh): run an arbitrary remote command on the login node
+- [`scripts/bridges2_gpu_shell.sh`](scripts/bridges2_gpu_shell.sh): request an interactive GPU session through `interact`
+- [`scripts/bridges2_repo_shell.sh`](scripts/bridges2_repo_shell.sh): open a shell directly in the remote `project_Lumina` checkout
+
+Examples:
+
+```bash
+ssh bridges2
+ssh bridges2-gpu-shared
+bash scripts/bridges2_remote.sh 'hostname && pwd && squeue -u $USER'
+bash scripts/bridges2_gpu_shell.sh
+bash scripts/bridges2_repo_shell.sh
+```
+
+Current local public key fingerprint:
+
+```text
+SHA256:rtbK5q7BswFexzjHPrpno9YRqi4MuCFVfHodabT/VDI
+```
+
+The key is present locally as `~/.ssh/id_ed25519`, but live auth testing showed that PSC is not currently accepting it for `lwang31`. Until PSC has that key associated with your account, SSH will fall back to password auth.
+
+Live verification from this machine:
+
+- login host reached successfully as `lwang31`
+- project repo found at `/ocean/projects/cis250038p/lwang31/project_Lumina`
+- short GPU allocation succeeded on `GPU-shared`
+- allocated node reported `v014.ib.bridges2.psc.edu`
+- `nvidia-smi` saw `Tesla V100-SXM2-32GB`
+
 ## What This Setup Assumes
 
 - One GPU on `GPU-shared`
@@ -31,6 +78,7 @@ Bridges-2 defines GPU usage in GPU-hours, where `1 GPU-hour = 1 SU`. Source: [PS
 
 1. Inspect and choose an AI module:
    - `module spider AI`
+   - on the current Bridges-2 install, the PyTorch path is `AI/pytorch_23.02-1.13.1-py3`
    - set `AI_MODULE` to the exact module version you want to use
 2. Define your PSC working root if `$PROJECT` is not already set:
    - `export PSC_ROOT=/ocean/projects/<grant>/<username>`
@@ -38,7 +86,7 @@ Bridges-2 defines GPU usage in GPU-hours, where `1 GPU-hour = 1 SU`. Source: [PS
    - `git clone https://github.com/Artifex2002/project_Lumina.git ${PSC_ROOT:-$PROJECT}/project_Lumina`
 4. Bootstrap the environment:
    - `cd ${PSC_ROOT:-$PROJECT}/project_Lumina`
-   - `AI_MODULE=<your-chosen-module> bash scripts/psc_setup_env.sh`
+   - `AI_MODULE=AI/pytorch_23.02-1.13.1-py3 bash scripts/psc_setup_env.sh`
 
 The setup script will:
 
@@ -72,9 +120,9 @@ Submit one condition at a time first:
 ```bash
 export PSC_ROOT=${PSC_ROOT:-$PROJECT}
 cd $PSC_ROOT/project_Lumina
-sbatch --export=ALL,AI_MODULE=<your-chosen-module>,CONDITION=none,TASK_IDX=0 scripts/psc_baseline.sbatch
-sbatch --export=ALL,AI_MODULE=<your-chosen-module>,CONDITION=prompt_fast,TASK_IDX=0 scripts/psc_baseline.sbatch
-sbatch --export=ALL,AI_MODULE=<your-chosen-module>,CONDITION=random_injection,TASK_IDX=0 scripts/psc_baseline.sbatch
+sbatch --export=ALL,AI_MODULE=AI/pytorch_23.02-1.13.1-py3,CONDITION=none,TASK_IDX=0 scripts/psc_baseline.sbatch
+sbatch --export=ALL,AI_MODULE=AI/pytorch_23.02-1.13.1-py3,CONDITION=prompt_fast,TASK_IDX=0 scripts/psc_baseline.sbatch
+sbatch --export=ALL,AI_MODULE=AI/pytorch_23.02-1.13.1-py3,CONDITION=random_injection,TASK_IDX=0 scripts/psc_baseline.sbatch
 ```
 
 Results will be written under:
@@ -102,6 +150,17 @@ Use `scp` or `rsync` for:
 - large result directories
 - large Hugging Face caches
 - one-off backups
+
+## Security And Operational Notes
+
+- PSC says you connect to `bridges2.psc.edu` first and then reach compute resources through interactive or batch jobs. Do not treat compute nodes as permanent SSH targets.
+- PSC uses one PSC password across its production systems. That means password reuse is a bigger risk than on a single machine.
+- The SSH config explicitly sets `ForwardAgent no`. Keep it that way unless you have a very specific reason, because agent forwarding lets remote systems ask your local agent to authenticate elsewhere.
+- Login nodes are shared infrastructure. Do editing, Git, environment management, light compilation, and job submission there. Do not run heavy training or evaluation on the login node.
+- Prefer Git or `rsync` for code and data movement. Avoid ad hoc copies of secrets, caches, and checkpoints into random shared directories.
+- Anything under project or shared filesystems should be treated as institutional infrastructure, not as a private workstation. Keep API tokens in shell startup files or secret stores you control, not in repo files.
+- Before trusting a new host key prompt, verify that it is really PSC. A changed host key on an existing alias is worth investigating.
+- For day-to-day development, use the login node for editing and a Slurm allocation for GPU execution. If you need a persistent browser IDE, PSC OnDemand is usually the supported path.
 
 ## V100 And Future Video Capture
 
